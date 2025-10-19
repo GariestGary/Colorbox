@@ -1,0 +1,19 @@
+{
+    "name": "VolumeBox.Colorbox.Tests",
+    "rootNamespace": "VolumeBox.Colorbox.Tests",
+    "references": [
+        "GUID:9e1c477c5a68ae84d9992891be302be3",
+        "GUID:57bf1f3f27fc0b446b4f7111b2f2236b"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
