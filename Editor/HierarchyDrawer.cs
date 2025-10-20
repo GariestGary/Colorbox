@@ -2,6 +2,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using VolumeBox.Colorbox.Core;
+using VolumeBox.Colorbox.Editor.AppearanceEditor;
 
 namespace VolumeBox.Colorbox.Editor
 {
@@ -21,6 +22,20 @@ namespace VolumeBox.Colorbox.Editor
 
         private static void OnDrawHierarchyItem(int instanceID, Rect selectionRect)
         {
+            bool isCtrlPressed = Application.platform == RuntimePlatform.OSXEditor ? Event.current.command : Event.current.control;
+            
+            if (Event.current.type == EventType.MouseDown && isCtrlPressed && selectionRect.Contains(Event.current.mousePosition))
+            {
+                GameObject clickedObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
+                
+                if (clickedObject != null)
+                {
+                    // Use your custom window here
+                    AppearanceEditorWindow.ShowWindow(clickedObject, Event.current.mousePosition + new Vector2(15, 150));
+                    Event.current.Use();
+                }
+            }
+            
             var obj = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
 
             if (obj == null)
@@ -62,19 +77,6 @@ namespace VolumeBox.Colorbox.Editor
             style.fontSize = data.FontSize;
             style.alignment = data.TextAlignment;
             EditorGUI.LabelField(rect, data.Reference.name, style);
-        }
-        
-        [MenuItem("GameObject/Edit Appearance", false, 0)]
-        static void PerformCustomAction(MenuCommand menuCommand)
-        {
-            var obj = menuCommand.context as GameObject;
-
-            if (obj == null)
-            {
-                return;
-            }
-            
-            AppearanceEditorWindow.Open(obj);
         }
     }
 }

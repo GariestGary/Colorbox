@@ -1,10 +1,7 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Assets/Scripts/Colorbox/Editor/AppearanceEditor/AppearanceEditorWindow.uss?fileID=7433441132597879392&amp;guid=3e19ecece09c15046833551c3c4d17a8&amp;type=3#AppearanceEditorWindow" />
-    <ui:VisualElement name="root" style="flex-grow: 1;">
-        <ui:VisualElement name="text-alignment-root" style="flex-grow: 0; flex-direction: row; justify-content: space-around; align-content: auto; flex-wrap: nowrap; align-items: stretch;">
-            <ui:RadioButtonGroup>
-                <ui:RadioButton label="Radio Button" />
-            </ui:RadioButtonGroup>
+    <ui:VisualElement style="flex-grow: 1; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+        <ui:VisualElement style="flex-grow: 1;">
+            <VolumeBox.Colorbox.Editor.Elements.RadioButtonsStack name="buttons-stack" style="height: 47px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

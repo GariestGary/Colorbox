@@ -1,0 +1,43 @@
+/* Base positioning classes */
+.first-child {
+    border-bottom-left-radius: 7px;
+    border-top-left-radius: 7px;
+    border-right-width: 0;
+}
+
+.middle-child {
+    border-left-width: 0;
+    border-right-width: 0;
+}
+
+.last-child {
+    border-bottom-right-radius: 7px;
+    border-top-right-radius: 7px;
+    border-left-width: 0;
+}
+
+/* Common button styling */
+.radio-button {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0;
+    padding: 2px 2px;
+    border-width: 1px;
+    border-color: rgb(128, 128, 128);
+    background-color: rgb(200, 200, 200);
+    color: black;
+    font-size: 12px;
+    height: 30px;
+    -unity-text-align: middle-center;
+}
+
+/* Selected state - works with ANY positioning class */
+.radio-button--selected {
+    background-color: rgb(26, 102, 204);
+    color: white;
+    -unity-font-style: bold;
+}
+
+.radio-button:hover {
+    background-color: darkgrey;
+}
