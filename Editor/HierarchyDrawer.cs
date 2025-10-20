@@ -12,6 +12,8 @@ namespace VolumeBox.Colorbox.Editor
 
         private static ColorboxSceneData _currentSceneData;
         
+        public static ColorboxSceneData CurrentSceneData => _currentSceneData;
+        
         static HierarchyDrawer()
         {
             EditorApplication.hierarchyWindowItemOnGUI += OnDrawHierarchyItem;
@@ -43,12 +45,36 @@ namespace VolumeBox.Colorbox.Editor
             }
             
             var data = _currentSceneData.GetOrAddGameObjectData(obj);
-            DrawBackground(selectionRect, data.BackgroundColor);
+            DrawItem(selectionRect, data);
+            _currentSceneData.ValidateGameObjects();
         }
         
-        private static void DrawBackground(Rect rect, Color color)
+        private static void DrawItem(Rect rect, ColoredGameObjectData data)
         {
-            EditorGUI.DrawRect(rect, color);
+            if (!data.EnabledCustomization)
+            {
+                return;
+            }
+            
+            EditorGUI.DrawRect(rect, data.BackgroundColor);
+            var style = new GUIStyle();
+            style.font = data.Font;
+            style.fontSize = data.FontSize;
+            style.alignment = data.TextAlignment;
+            EditorGUI.LabelField(rect, data.Reference.name, style);
+        }
+        
+        [MenuItem("GameObject/Edit Appearance", false, 0)]
+        static void PerformCustomAction(MenuCommand menuCommand)
+        {
+            var obj = menuCommand.context as GameObject;
+
+            if (obj == null)
+            {
+                return;
+            }
+            
+            AppearanceEditorWindow.Open(obj);
         }
     }
 }
