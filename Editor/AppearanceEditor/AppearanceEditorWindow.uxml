@@ -1,7 +1,23 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement style="flex-grow: 1; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
         <ui:VisualElement style="flex-grow: 1;">
-            <VolumeBox.Colorbox.Editor.Elements.RadioButtonsStack name="buttons-stack" style="height: 47px;" />
+            <ui:VisualElement name="header" style="flex-grow: 1; flex-direction: row; align-self: auto; align-content: auto;">
+                <ui:Label text="Label" name="object-name" style="-unity-text-align: middle-left; height: 33px; font-size: 21px; flex-grow: 1;" />
+                <ui:Button text="Button" />
+            </ui:VisualElement>
+            <ui:Toggle label="Enable Customization" name="enable-customization" style="flex-shrink: 0; margin-top: 2px; margin-right: 0; margin-bottom: 2px; margin-left: 2px;" />
+            <uie:ObjectField label="Font" type="UnityEngine.Font, UnityEngine.TextRenderingModule" name="font" style="display: flex; visibility: visible;" />
+            <ui:VisualElement name="text-alignment-root" style="flex-grow: 1; padding-bottom: 0; margin-bottom: 52px;">
+                <ui:Label text="Text Alignment" style="height: 19px; padding-left: 0; margin-left: 4px;" />
+                <ui:VisualElement style="flex-grow: 1; padding-left: 4px; padding-top: 0; padding-right: 4px; padding-bottom: 0; margin-top: 0; height: 35px; flex-shrink: 1; align-content: auto; margin-bottom: 20px;">
+                    <VolumeBox.Colorbox.Editor.Elements.RadioButtonsStack name="text-alignment" style="height: 14px; flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:IntegerField label="Font Size" value="42" name="font-size" />
+            <ui:EnumField label="Background" value="Color" type="VolumeBox.Colorbox.Core.BackgroundFillType, VolumeBox.Colorbox.Core" name="background-type" />
+            <uie:ObjectField label="Texture" name="background-texture" type="UnityEngine.Texture2D, UnityEngine.CoreModule" />
+            <uie:GradientField label="Gradient" value="Blend:{0,#FF0000FF};{1,#0000FFFF};{1,#00FF00FF}+{0,1};{1,1}" name="background-gradient" />
+            <uie:ColorField label="Background Color" value="#00FFFFFF" name="background-color" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -10,7 +10,11 @@ namespace VolumeBox.Colorbox.Core
         public bool EnabledCustomization;
         public Font Font;
         public int FontSize;
-        public Color BackgroundColor = Color.aliceBlue;
+        public BackgroundFillType FillType;
+        public Gradient BackgroundGradient;
+        public Color BackgroundColor;
+        public Texture2D BackgroundTexture;
+        public Color BackgroundTextureTint;
         public Color TextColor;
         public TextAnchor TextAlignment;
     }
@@ -18,5 +22,12 @@ namespace VolumeBox.Colorbox.Core
     public class ColoredGameObjectWrapper : ScriptableObject
     {
         public ColoredGameObjectData Data;
+    }
+
+    public enum BackgroundFillType
+    {
+        Color,
+        Gradient,
+        Texture,
     }
 }

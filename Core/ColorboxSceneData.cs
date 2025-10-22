@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -37,6 +38,11 @@ namespace VolumeBox.Colorbox.Core
 
             excessObjects.ForEach(x => _gameObjectsData.Remove(x));
             excessObjects = null;
+        }
+
+        private void OnValidate()
+        {
+            EditorApplication.RepaintHierarchyWindow();
         }
     }
 }

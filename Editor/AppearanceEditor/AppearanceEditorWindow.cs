@@ -1,23 +1,31 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using VolumeBox.Colorbox.Core;
 using VolumeBox.Colorbox.Editor.Elements;
+using Object = UnityEngine.Object;
 using PopupWindow = UnityEditor.PopupWindow;
 
 namespace VolumeBox.Colorbox.Editor.AppearanceEditor
 {
-    public class AppearanceEditorWindow: EditorWindow
+    public class AppearanceEditorWindow : EditorWindow
     {
         [SerializeField] private VisualTreeAsset _treeAsset;
 
         private TemplateContainer _tree;
-        
+        private static ColoredGameObjectData _data;
+        private static AppearanceEditorWindow _currentWindow;
+
         public static void ShowWindow(GameObject target, Vector2 position)
         {
-            var window = CreateInstance<AppearanceEditorWindow>();
-            window.position = new Rect(position.x, position.y, 260, 180);
-            window.ShowPopup();
+            _currentWindow?.Close();
+            _currentWindow = CreateInstance<AppearanceEditorWindow>();
+            _currentWindow.position = new Rect(position.x, position.y, 260, 200);
+            _data = HierarchyDrawer.CurrentSceneData.GetOrAddGameObjectData(target);
+            _currentWindow.ShowPopup();
         }
 
         private void CreateGUI()
@@ -25,8 +33,22 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
             _tree = _treeAsset.Instantiate();
             _tree.style.height = new StyleLength(Length.Percent(100));
             var root = rootVisualElement;
-            var stack = _tree.Q<RadioButtonsStack>("buttons-stack");
-            var textures = new Texture2D[]
+            root.style.backgroundColor = Color.clear;
+            
+            //Customization switching
+            var enableCustomization = _tree.Q<Toggle>("enable-customization");
+            enableCustomization.value = _data.EnabledCustomization;
+            enableCustomization.RegisterValueChangedCallback(OnCustomizationSwitched);
+            
+            //Font
+            var font = _tree.Q<ObjectField>("font");
+            font.value = _data.Font;
+            font.RegisterValueChangedCallback(OnFontChanged);
+            
+            //Text alignment
+            var textAlignment = _tree.Q<RadioButtonsStack>("text-alignment");
+            
+            var textures = new[]
             {
                 LoadTex("Textures/upper_left"),
                 LoadTex("Textures/upper_center"),
@@ -38,34 +60,93 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
                 LoadTex("Textures/lower_center"),
                 LoadTex("Textures/lower_right"),
             };
-            stack.SetButtons(textures);
-            // var borderWidth = 3;
-            // root.style.borderBottomWidth = borderWidth;
-            // root.style.borderLeftWidth = borderWidth;
-            // root.style.borderRightWidth = borderWidth;
-            // root.style.borderTopWidth = borderWidth;
-            // var borderColor = Color.gray2;
-            // root.style.borderBottomColor = borderColor;
-            // root.style.borderLeftColor = borderColor;
-            // root.style.borderRightColor = borderColor;
-            // root.style.borderTopColor = borderColor;
-            // root.style.backgroundColor = Color.gray;
+
+            textAlignment.SelectedIndex = (int)_data.TextAlignment;
+            textAlignment.SetButtons(textures);
+            textAlignment.SelectionChanged += OnTextAlignmentChanged;
+            
+            //Font size
+            var fontSize = _tree.Q<IntegerField>("font-size");
+            fontSize.value = _data.FontSize;
+            fontSize.RegisterValueChangedCallback(OnFontSizeChanged);
+            
+            //Background type
+            var backgroundType = _tree.Q<EnumField>("background-type");
+            backgroundType.value = _data.FillType;
+            backgroundType.RegisterValueChangedCallback(OnBackgroundTypeChanged);
+            
+            //Background texture
+            var backgroundTexture = _tree.Q<ObjectField>("background-texture");
+            backgroundTexture.visible = _data.FillType == BackgroundFillType.Texture;
+            backgroundTexture.value = _data.BackgroundTexture;
+            backgroundTexture.RegisterValueChangedCallback(OnBackgroundTextureChanged);
+            
+            //Background color
+            var backgroundColor = _tree.Q<ColorField>("background-color");
+            backgroundColor.value = _data.BackgroundColor;
+            backgroundColor.visible = _data.FillType == BackgroundFillType.Color;
+            backgroundColor.RegisterValueChangedCallback(OnBackgroundColorChanged);
+            
+            //Background gradient
+            var backgroundGradient = _tree.Q<GradientField>("background-gradient");
+            backgroundGradient.value = _data.BackgroundGradient;
+            backgroundGradient.visible = _data.FillType == BackgroundFillType.Gradient;
+            backgroundGradient.RegisterValueChangedCallback(OnBackgroundGradientChanged);
+            
             root.Add(_tree);
+        }
+
+        private void OnBackgroundGradientChanged(ChangeEvent<Gradient> evt)
+        {
+            _data.BackgroundGradient = evt.newValue;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnBackgroundColorChanged(ChangeEvent<Color> evt)
+        {
+            _data.BackgroundColor = evt.newValue;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnBackgroundTextureChanged(ChangeEvent<Object> evt)
+        {
+            _data.BackgroundTexture = evt.newValue as Texture2D;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnBackgroundTypeChanged(ChangeEvent<Enum> evt)
+        {
+            _data.FillType = (BackgroundFillType)evt.newValue;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnFontSizeChanged(ChangeEvent<int> evt)
+        {
+            _data.FontSize = evt.newValue;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnFontChanged(ChangeEvent<Object> evt)
+        {
+            _data.Font = evt.newValue as Font;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnCustomizationSwitched(ChangeEvent<bool> evt)
+        {
+            _data.EnabledCustomization = evt.newValue;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+
+        private void OnTextAlignmentChanged(int obj)
+        {
+            _data.TextAlignment = (TextAnchor)obj;
+            EditorApplication.RepaintHierarchyWindow();
         }
 
         private Texture2D LoadTex(string path)
         {
             return Resources.Load<Texture2D>(path);
-        }
-
-        private void OnGUI()
-        {
-            
-        }
-
-        private void OnLostFocus()
-        {
-            Close();
         }
     }
 }

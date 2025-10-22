@@ -10,9 +10,42 @@ namespace VolumeBox.Colorbox.Editor.Elements
     {
         private List<Button> _buttons = new();
 
-        public event Action SelectionChanged;
+        public event Action<int> SelectionChanged;
 
         private int _selectedIndex = -1;
+        
+        public int SelectedIndex 
+        { 
+            get => _selectedIndex;
+            set
+            {
+                if (_selectedIndex != value)
+                {
+                    _selectedIndex = value;
+                    UpdateButtonAppearance();
+                    SelectionChanged?.Invoke(_selectedIndex);
+                }
+            }
+        }
+        
+        private void UpdateButtonAppearance()
+        {
+            for (int i = 0; i < _buttons.Count; i++)
+            {
+                var button = _buttons[i];
+                
+                if (i == _selectedIndex)
+                {
+                    // Selected button styling
+                    button.AddToClassList("radio-button--selected");
+                }
+                else
+                {
+                    // Normal button styling
+                    button.RemoveFromClassList("radio-button--selected");
+                }
+            }
+        }
 
         public RadioButtonsStack()
         {
@@ -58,12 +91,8 @@ namespace VolumeBox.Colorbox.Editor.Elements
                     button.AddToClassList("last-child");
                 }
 
-                if (i == _selectedIndex)
-                {
-                    //HOW I CAN MAKE BUTTON LOOK SELECTED????
-                }
-
-                button.clicked += OnButtonClicked;
+                button.userData = i;
+                button.clicked += () => OnButtonClicked(button);
 
                 if (textures != null)
                 {
@@ -71,14 +100,17 @@ namespace VolumeBox.Colorbox.Editor.Elements
                 }
                 
                 root.Add(button);
+                _buttons.Add(button);
             }
             
             Add(root);
+            UpdateButtonAppearance();
         }
 
-        private void OnButtonClicked()
+        private void OnButtonClicked(Button clickedButton)
         {
-            //HOW I CAN GET CLICKED BUTTON INDEX????
+            int clickedIndex = (int)clickedButton.userData;
+            SelectedIndex = clickedIndex;
         }
     }
 }

@@ -71,12 +71,59 @@ namespace VolumeBox.Colorbox.Editor
                 return;
             }
             
-            EditorGUI.DrawRect(rect, data.BackgroundColor);
+            DrawGradientBackground(rect, data.BackgroundGradient);
             var style = new GUIStyle();
             style.font = data.Font;
             style.fontSize = data.FontSize;
             style.alignment = data.TextAlignment;
             EditorGUI.LabelField(rect, data.Reference.name, style);
+        }
+        
+        private static void DrawGradientBackground(Rect rect, Gradient gradient, bool horizontal = true)
+        {
+            if (gradient == null) return;
+
+            int textureWidth = horizontal ? 32 : 1;
+            int textureHeight = horizontal ? 1 : 32;
+    
+            // Create texture with optimal size for the gradient direction
+            Texture2D texture = new Texture2D(textureWidth, textureHeight);
+            texture.wrapMode = TextureWrapMode.Clamp;
+    
+            // Fill texture with gradient colors
+            Color[] pixels = new Color[textureWidth * textureHeight];
+    
+            for (int i = 0; i < (horizontal ? textureWidth : textureHeight); i++)
+            {
+                float t = (float)i / (horizontal ? textureWidth - 1 : textureHeight - 1);
+                Color color = gradient.Evaluate(t);
+        
+                if (horizontal)
+                {
+                    // Horizontal gradient - same color for entire column
+                    for (int j = 0; j < textureHeight; j++)
+                    {
+                        pixels[i + j * textureWidth] = color;
+                    }
+                }
+                else
+                {
+                    // Vertical gradient - same color for entire row
+                    for (int j = 0; j < textureWidth; j++)
+                    {
+                        pixels[j + i * textureWidth] = color;
+                    }
+                }
+            }
+    
+            texture.SetPixels(pixels);
+            texture.Apply();
+    
+            // Draw the gradient texture
+            GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
+    
+            // Clean up
+            UnityEngine.Object.DestroyImmediate(texture);
         }
     }
 }
