@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -7,7 +6,6 @@ using UnityEngine.UIElements;
 using VolumeBox.Colorbox.Core;
 using VolumeBox.Colorbox.Editor.Elements;
 using Object = UnityEngine.Object;
-using PopupWindow = UnityEditor.PopupWindow;
 
 namespace VolumeBox.Colorbox.Editor.AppearanceEditor
 {
@@ -16,16 +14,25 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
         [SerializeField] private VisualTreeAsset _treeAsset;
 
         private TemplateContainer _tree;
-        private static ColoredGameObjectData _data;
+        private ColoredGameObjectData _data;
+        private GradientField _backgroundGradient;
+        private ObjectField _backgroundTexture;
+        private ColorField _backgroundColor;
         private static AppearanceEditorWindow _currentWindow;
 
         public static void ShowWindow(GameObject target, Vector2 position)
         {
             _currentWindow?.Close();
+            var data = HierarchyDrawer.CurrentSceneData.GetOrAddGameObjectData(target);
             _currentWindow = CreateInstance<AppearanceEditorWindow>();
-            _currentWindow.position = new Rect(position.x, position.y, 260, 200);
-            _data = HierarchyDrawer.CurrentSceneData.GetOrAddGameObjectData(target);
+            _currentWindow.SetData(data);
+            _currentWindow.position = new Rect(position.x, position.y, 260, 280);
             _currentWindow.ShowPopup();
+        }
+
+        private void SetData(ColoredGameObjectData data)
+        {
+            _data = data;
         }
 
         private void CreateGUI()
@@ -39,6 +46,10 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
             var enableCustomization = _tree.Q<Toggle>("enable-customization");
             enableCustomization.value = _data.EnabledCustomization;
             enableCustomization.RegisterValueChangedCallback(OnCustomizationSwitched);
+            
+            //Close button
+            var closeButton = _tree.Q<Button>("close-button");
+            closeButton.clicked += Close;
             
             //Font
             var font = _tree.Q<ObjectField>("font");
@@ -76,24 +87,30 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
             backgroundType.RegisterValueChangedCallback(OnBackgroundTypeChanged);
             
             //Background texture
-            var backgroundTexture = _tree.Q<ObjectField>("background-texture");
-            backgroundTexture.visible = _data.FillType == BackgroundFillType.Texture;
-            backgroundTexture.value = _data.BackgroundTexture;
-            backgroundTexture.RegisterValueChangedCallback(OnBackgroundTextureChanged);
+            _backgroundTexture = _tree.Q<ObjectField>("background-texture");
+            _backgroundTexture.value = _data.BackgroundTexture;
+            _backgroundTexture.RegisterValueChangedCallback(OnBackgroundTextureChanged);
             
             //Background color
-            var backgroundColor = _tree.Q<ColorField>("background-color");
-            backgroundColor.value = _data.BackgroundColor;
-            backgroundColor.visible = _data.FillType == BackgroundFillType.Color;
-            backgroundColor.RegisterValueChangedCallback(OnBackgroundColorChanged);
+            _backgroundColor = _tree.Q<ColorField>("background-color");
+            _backgroundColor.value = _data.BackgroundColor;
+            _backgroundColor.RegisterValueChangedCallback(OnBackgroundColorChanged);
             
             //Background gradient
-            var backgroundGradient = _tree.Q<GradientField>("background-gradient");
-            backgroundGradient.value = _data.BackgroundGradient;
-            backgroundGradient.visible = _data.FillType == BackgroundFillType.Gradient;
-            backgroundGradient.RegisterValueChangedCallback(OnBackgroundGradientChanged);
+            _backgroundGradient = _tree.Q<GradientField>("background-gradient");
+            _backgroundGradient.value = _data.BackgroundGradient;
+            _backgroundGradient.RegisterValueChangedCallback(OnBackgroundGradientChanged);
+            
+            ValidateBackgroundType();
             
             root.Add(_tree);
+        }
+
+        private void ValidateBackgroundType()
+        {
+            _backgroundGradient.style.display = _data.FillType == BackgroundFillType.Gradient ? DisplayStyle.Flex : DisplayStyle.None;
+            _backgroundColor.style.display = _data.FillType == BackgroundFillType.Color ? DisplayStyle.Flex : DisplayStyle.None;
+            _backgroundTexture.style.display = _data.FillType == BackgroundFillType.Texture ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void OnBackgroundGradientChanged(ChangeEvent<Gradient> evt)
@@ -117,6 +134,7 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
         private void OnBackgroundTypeChanged(ChangeEvent<Enum> evt)
         {
             _data.FillType = (BackgroundFillType)evt.newValue;
+            ValidateBackgroundType();
             EditorApplication.RepaintHierarchyWindow();
         }
 
@@ -147,6 +165,16 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
         private Texture2D LoadTex(string path)
         {
             return Resources.Load<Texture2D>(path);
+        }
+        
+        private void MarkDataDirty()
+        {
+            // If your data is stored in another asset, mark that asset dirty
+            // For example, if HierarchyDrawer.CurrentSceneData holds the reference:
+            if (HierarchyDrawer.CurrentSceneData != null)
+            {
+                EditorUtility.SetDirty(HierarchyDrawer.CurrentSceneData);
+            }
         }
     }
 }

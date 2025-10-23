@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace VolumeBox.Colorbox.Core
 {
@@ -17,6 +18,7 @@ namespace VolumeBox.Colorbox.Core
         public Color BackgroundTextureTint;
         public Color TextColor;
         public TextAnchor TextAlignment;
+        public ColorboxSceneData SceneData;
     }
 
     public class ColoredGameObjectWrapper : ScriptableObject

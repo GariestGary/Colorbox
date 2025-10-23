@@ -20,6 +20,7 @@ namespace VolumeBox.Colorbox.Core
             {
                 data = new();
                 data.Reference = obj;
+                data.SceneData = this;
                 _gameObjectsData.Add(data);
             }
 
