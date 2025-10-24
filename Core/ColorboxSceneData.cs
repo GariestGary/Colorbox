@@ -36,9 +36,7 @@ namespace VolumeBox.Colorbox.Core
         {
             var excessObjects = _gameObjectsData
                 .Where(x => Scene.GetRootGameObjects().All(y => y.GetInstanceID() != x.Reference.GetInstanceID())).ToList();
-
             excessObjects.ForEach(x => _gameObjectsData.Remove(x));
-            excessObjects = null;
         }
 
         private void OnValidate()

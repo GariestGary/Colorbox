@@ -1,11 +1,8 @@
-using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VolumeBox.Colorbox.Core;
-using VolumeBox.Colorbox.Editor.Elements;
-using Object = UnityEngine.Object;
 
 namespace VolumeBox.Colorbox.Editor.AppearanceEditor
 {
@@ -17,6 +14,7 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
         private ColoredGameObjectData _data;
         private GradientField _backgroundGradient;
         private ObjectField _backgroundTexture;
+        private ColorField _backgroundTextureTint;
         private ColorField _backgroundColor;
         private static AppearanceEditorWindow _currentWindow;
 
@@ -25,8 +23,9 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
             _currentWindow?.Close();
             var data = HierarchyDrawer.CurrentSceneData.GetOrAddGameObjectData(target);
             _currentWindow = CreateInstance<AppearanceEditorWindow>();
+            _currentWindow.titleContent = new GUIContent($"\"{target.name}\" Appearance Settings");
             _currentWindow.SetData(data);
-            _currentWindow.position = new Rect(position.x, position.y, 260, 280);
+            _currentWindow.position = new Rect(position.x, position.y, 280, 440);
             _currentWindow.ShowPopup();
         }
 
@@ -35,145 +34,212 @@ namespace VolumeBox.Colorbox.Editor.AppearanceEditor
             _data = data;
         }
 
-        private void CreateGUI()
+        private void OnGUI()
         {
-            _tree = _treeAsset.Instantiate();
-            _tree.style.height = new StyleLength(Length.Percent(100));
-            var root = rootVisualElement;
-            root.style.backgroundColor = Color.clear;
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUI.DrawRect(position, Color.red);
             
-            //Customization switching
-            var enableCustomization = _tree.Q<Toggle>("enable-customization");
-            enableCustomization.value = _data.EnabledCustomization;
-            enableCustomization.RegisterValueChangedCallback(OnCustomizationSwitched);
-            
-            //Close button
-            var closeButton = _tree.Q<Button>("close-button");
-            closeButton.clicked += Close;
-            
-            //Font
-            var font = _tree.Q<ObjectField>("font");
-            font.value = _data.Font;
-            font.RegisterValueChangedCallback(OnFontChanged);
-            
-            //Text alignment
-            var textAlignment = _tree.Q<RadioButtonsStack>("text-alignment");
-            
-            var textures = new[]
+            DrawContent();
+
+            if (EditorGUI.EndChangeCheck())
             {
-                LoadTex("Textures/upper_left"),
-                LoadTex("Textures/upper_center"),
-                LoadTex("Textures/upper_right"),
-                LoadTex("Textures/middle_left"),
-                LoadTex("Textures/middle_center"),
-                LoadTex("Textures/middle_right"),
-                LoadTex("Textures/lower_left"),
-                LoadTex("Textures/lower_center"),
-                LoadTex("Textures/lower_right"),
-            };
-
-            textAlignment.SelectedIndex = (int)_data.TextAlignment;
-            textAlignment.SetButtons(textures);
-            textAlignment.SelectionChanged += OnTextAlignmentChanged;
-            
-            //Font size
-            var fontSize = _tree.Q<IntegerField>("font-size");
-            fontSize.value = _data.FontSize;
-            fontSize.RegisterValueChangedCallback(OnFontSizeChanged);
-            
-            //Background type
-            var backgroundType = _tree.Q<EnumField>("background-type");
-            backgroundType.value = _data.FillType;
-            backgroundType.RegisterValueChangedCallback(OnBackgroundTypeChanged);
-            
-            //Background texture
-            _backgroundTexture = _tree.Q<ObjectField>("background-texture");
-            _backgroundTexture.value = _data.BackgroundTexture;
-            _backgroundTexture.RegisterValueChangedCallback(OnBackgroundTextureChanged);
-            
-            //Background color
-            _backgroundColor = _tree.Q<ColorField>("background-color");
-            _backgroundColor.value = _data.BackgroundColor;
-            _backgroundColor.RegisterValueChangedCallback(OnBackgroundColorChanged);
-            
-            //Background gradient
-            _backgroundGradient = _tree.Q<GradientField>("background-gradient");
-            _backgroundGradient.value = _data.BackgroundGradient;
-            _backgroundGradient.RegisterValueChangedCallback(OnBackgroundGradientChanged);
-            
-            ValidateBackgroundType();
-            
-            root.Add(_tree);
+                EditorApplication.RepaintHierarchyWindow();
+            }
         }
 
-        private void ValidateBackgroundType()
+        private void DrawContent()
         {
-            _backgroundGradient.style.display = _data.FillType == BackgroundFillType.Gradient ? DisplayStyle.Flex : DisplayStyle.None;
-            _backgroundColor.style.display = _data.FillType == BackgroundFillType.Color ? DisplayStyle.Flex : DisplayStyle.None;
-            _backgroundTexture.style.display = _data.FillType == BackgroundFillType.Texture ? DisplayStyle.Flex : DisplayStyle.None;
-        }
+            DrawHeader();
+            EditorGUILayout.Space();
 
-        private void OnBackgroundGradientChanged(ChangeEvent<Gradient> evt)
-        {
-            _data.BackgroundGradient = evt.newValue;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            _data.EnabledCustomization = EditorGUILayout.Toggle("Enable Styling", _data.EnabledCustomization);
+            EditorGUILayout.Space();
 
-        private void OnBackgroundColorChanged(ChangeEvent<Color> evt)
-        {
-            _data.BackgroundColor = evt.newValue;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            _data.Font = (Font)EditorGUILayout.ObjectField("Font", _data.Font, typeof(Font), false);
+            EditorGUILayout.Space();
 
-        private void OnBackgroundTextureChanged(ChangeEvent<Object> evt)
-        {
-            _data.BackgroundTexture = evt.newValue as Texture2D;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            DrawAlignmentButtons();
+            EditorGUILayout.Space();
 
-        private void OnBackgroundTypeChanged(ChangeEvent<Enum> evt)
-        {
-            _data.FillType = (BackgroundFillType)evt.newValue;
-            ValidateBackgroundType();
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            DrawFontStyleButtons();
+            EditorGUILayout.Space();
 
-        private void OnFontSizeChanged(ChangeEvent<int> evt)
-        {
-            _data.FontSize = evt.newValue;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            _data.FontSize = EditorGUILayout.IntField("Font Size", _data.FontSize);
+            EditorGUILayout.Space();
 
-        private void OnFontChanged(ChangeEvent<Object> evt)
-        {
-            _data.Font = evt.newValue as Font;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            _data.FontColor = EditorGUILayout.ColorField("Font Color", _data.FontColor);
+            EditorGUILayout.Space();
 
-        private void OnCustomizationSwitched(ChangeEvent<bool> evt)
-        {
-            _data.EnabledCustomization = evt.newValue;
-            EditorApplication.RepaintHierarchyWindow();
-        }
+            _data.FillType = (BackgroundFillType)EditorGUILayout.EnumPopup("Background Type", _data.FillType);
+            EditorGUILayout.Space();
 
-        private void OnTextAlignmentChanged(int obj)
-        {
-            _data.TextAlignment = (TextAnchor)obj;
-            EditorApplication.RepaintHierarchyWindow();
-        }
-
-        private Texture2D LoadTex(string path)
-        {
-            return Resources.Load<Texture2D>(path);
+            DrawBackgroundFields();
         }
         
-        private void MarkDataDirty()
+        private void DrawHeader()
         {
-            // If your data is stored in another asset, mark that asset dirty
-            // For example, if HierarchyDrawer.CurrentSceneData holds the reference:
-            if (HierarchyDrawer.CurrentSceneData != null)
+            EditorGUILayout.BeginHorizontal(); // Start the horizontal row for header
             {
-                EditorUtility.SetDirty(HierarchyDrawer.CurrentSceneData);
+                // Header label on left
+                EditorGUILayout.LabelField("Text Style Settings", EditorStyles.boldLabel);
+        
+                // Flexible space pushes the close button to the right
+                GUILayout.FlexibleSpace();
+        
+                var prevColor = GUI.color;
+                GUI.color = Color.brown;
+                // Close button with fixed width and right-side constraint
+                if (GUILayout.Button("X", GUILayout.Width(15),  GUILayout.Height(15)))
+                {
+                    this.Close();
+                }
+                GUI.color = prevColor;
+            }
+            EditorGUILayout.EndHorizontal(); // End the horizontal row
+    
+            // Optional: Add a separator line
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider, GUILayout.Height(5));
+        }
+
+        private static Color? DrawPastelColorPalette()
+        {
+            Color? selectedColor = null;
+            
+            // Define nice pastel colors
+            var pastelColors = new Color[]
+            {
+                new(0.988f, 0.729f, 0.729f), // Soft Pink
+                new(0.729f, 0.988f, 0.792f), // Mint Green
+                new(0.729f, 0.847f, 0.988f), // Light Blue
+                new(0.988f, 0.917f, 0.729f), // Pale Yellow
+                new(0.847f, 0.729f, 0.988f), // Lavender
+                new(0.729f, 0.988f, 0.965f)  // Aqua
+            };
+            
+            var width = (_currentWindow.position.width - 21) / (pastelColors.Length);
+
+            EditorGUILayout.BeginHorizontal();
+            {
+                for (var i = 0; i < pastelColors.Length; i++)
+                {
+                    // Save the current GUI color
+                    var originalColor = GUI.color;
+                    
+                    // Set the button color
+                    GUI.color = pastelColors[i];
+                    
+                    // Create the colored button
+                    if (GUILayout.Button("", GUILayout.Width(width), GUILayout.Height(20)))
+                    {
+                        selectedColor = pastelColors[i];
+                    }
+                    
+                    // Restore the original GUI color
+                    GUI.color = originalColor;
+
+                    // Add small space between buttons except for the last one
+                    if (i < pastelColors.Length - 1)
+                    {
+                        //GUILayout.Space(1);
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            return selectedColor;
+        }
+
+        private void DrawAlignmentButtons()
+        {
+            EditorGUILayout.LabelField("Text Alignment", EditorStyles.label);
+            
+            // Top row
+            EditorGUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.UpperLeft, "TL", "Button"))
+                    _data.TextAlignment = TextAnchor.UpperLeft;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.UpperCenter, "TC", "Button"))
+                    _data.TextAlignment = TextAnchor.UpperCenter;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.UpperRight, "TR", "Button"))
+                    _data.TextAlignment = TextAnchor.UpperRight;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // Middle row
+            EditorGUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.MiddleLeft, "ML", "Button"))
+                    _data.TextAlignment = TextAnchor.MiddleLeft;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.MiddleCenter, "MC", "Button"))
+                    _data.TextAlignment = TextAnchor.MiddleCenter;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.MiddleRight, "MR", "Button"))
+                    _data.TextAlignment = TextAnchor.MiddleRight;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // Bottom row
+            EditorGUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.LowerLeft, "BL", "Button"))
+                    _data.TextAlignment = TextAnchor.LowerLeft;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.LowerCenter, "BC", "Button"))
+                    _data.TextAlignment = TextAnchor.LowerCenter;
+                if (GUILayout.Toggle(_data.TextAlignment == TextAnchor.LowerRight, "BR", "Button"))
+                    _data.TextAlignment = TextAnchor.LowerRight;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawFontStyleButtons()
+        {
+            EditorGUILayout.LabelField("Font Style", EditorStyles.label);
+            
+            EditorGUILayout.BeginHorizontal();
+            {
+                // Bold toggle
+                var isBold = (_data.FontStyle & FontStyle.Bold) == FontStyle.Bold;
+                var newBold = GUILayout.Toggle(isBold, "B", "Button");
+                
+                // Italic toggle
+                var isItalic = (_data.FontStyle & FontStyle.Italic) == FontStyle.Italic;
+                var newItalic = GUILayout.Toggle(isItalic, "I", "Button");
+                
+                // Update font style
+                _data.FontStyle = FontStyle.Normal;
+                if (newBold) _data.FontStyle |= FontStyle.Bold;
+                if (newItalic) _data.FontStyle |= FontStyle.Italic;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawBackgroundFields()
+        {
+            switch (_data.FillType)
+            {
+                case BackgroundFillType.Color:
+                    var color = DrawPastelColorPalette();
+
+                    if (color != null)
+                    {
+                        _data.BackgroundColor = color.Value;
+                    }
+                    
+                    EditorGUILayout.Space();
+                    _data.BackgroundColor = EditorGUILayout.ColorField("Background Color", _data.BackgroundColor);
+                    break;
+                    
+                case BackgroundFillType.Gradient:
+                    // Custom property field for gradient since there's no built-in one
+                    _data.BackgroundGradient = EditorGUILayout.GradientField("Gradient", _data.BackgroundGradient);
+                    break;
+                    
+                case BackgroundFillType.Texture:
+                    _data.BackgroundTexture = (Texture2D)EditorGUILayout.ObjectField("Background Texture", _data.BackgroundTexture, typeof(Texture2D), false);
+                    EditorGUILayout.Space();
+                    _data.BackgroundTextureTint = EditorGUILayout.ColorField("Texture Tint", _data.BackgroundTextureTint);
+                    break;
             }
         }
     }

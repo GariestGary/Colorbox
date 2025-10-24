@@ -10,14 +10,15 @@ namespace VolumeBox.Colorbox.Core
         public GameObject Reference;
         public bool EnabledCustomization;
         public Font Font;
-        public int FontSize;
-        public BackgroundFillType FillType;
+        public int FontSize = 12;
+        public BackgroundFillType FillType = BackgroundFillType.Color;
         public Gradient BackgroundGradient;
-        public Color BackgroundColor;
+        public FontStyle FontStyle;
+        public Color BackgroundColor = Color.black;
         public Texture2D BackgroundTexture;
-        public Color BackgroundTextureTint;
-        public Color TextColor;
-        public TextAnchor TextAlignment;
+        public Color BackgroundTextureTint = Color.white;
+        public Color FontColor;
+        public TextAnchor TextAlignment = TextAnchor.MiddleLeft;
         public ColorboxSceneData SceneData;
     }
 

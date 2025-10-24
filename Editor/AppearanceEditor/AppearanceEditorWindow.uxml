@@ -14,8 +14,10 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:IntegerField label="Font Size" value="42" name="font-size" />
+            <uie:ColorField label="Font Color" value="#00FFFFFF" name="font-color" />
             <ui:EnumField label="Background" value="Color" type="VolumeBox.Colorbox.Core.BackgroundFillType, VolumeBox.Colorbox.Core" name="background-type" />
             <uie:ObjectField label="Texture" name="background-texture" type="UnityEngine.Texture2D, UnityEngine.CoreModule" />
+            <uie:ColorField label="Tint" value="#00FFFFFF" name="background-texture-tint-color" />
             <uie:GradientField label="Gradient" value="Blend:{0,#FF0000FF};{1,#0000FFFF};{1,#00FF00FF}+{0,1};{1,1}" name="background-gradient" />
             <uie:ColorField label="Background Color" value="#00FFFFFF" name="background-color" />
         </ui:VisualElement>

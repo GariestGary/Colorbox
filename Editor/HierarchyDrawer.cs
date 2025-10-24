@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,6 @@ namespace VolumeBox.Colorbox.Editor
     public static class HierarchyDrawer
     {
         private const string DataObjectName = "[Colorbox Scene Data]";
-
         private static ColorboxSceneData _currentSceneData;
         
         public static ColorboxSceneData CurrentSceneData => _currentSceneData;
@@ -30,8 +30,8 @@ namespace VolumeBox.Colorbox.Editor
                 
                 if (clickedObject != null)
                 {
-                    // Use your custom window here
-                    AppearanceEditorWindow.ShowWindow(clickedObject, Event.current.mousePosition + new Vector2(15, 150));
+                    var mousePos = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+                    AppearanceEditorWindow.ShowWindow(clickedObject, mousePos + new Vector2(15, 15));
                     Event.current.Use();
                 }
             }
@@ -70,38 +70,74 @@ namespace VolumeBox.Colorbox.Editor
             {
                 return;
             }
+
+            switch (data.FillType)
+            {
+                case BackgroundFillType.Color:
+                    EditorGUI.DrawRect(rect, data.BackgroundColor);
+                    break;
+                case BackgroundFillType.Gradient:
+                    DrawGradientBackground(rect, data.BackgroundGradient);
+                    break;
+                case BackgroundFillType.Texture:
+                    DrawTiledTexture(rect, data.BackgroundTexture, data.BackgroundTextureTint);
+                    break;
+            }
             
-            DrawGradientBackground(rect, data.BackgroundGradient);
             var style = new GUIStyle();
             style.font = data.Font;
             style.fontSize = data.FontSize;
+            style.fontStyle = data.FontStyle;
             style.alignment = data.TextAlignment;
+            style.normal.textColor = data.FontColor;
             EditorGUI.LabelField(rect, data.Reference.name, style);
+        }
+        
+        private static void DrawTiledTexture(Rect rect, Texture2D patternTexture, Color tintColor)
+        {
+            if (patternTexture == null) return;
+    
+            // Set the texture to repeat
+            patternTexture.wrapMode = TextureWrapMode.Repeat;
+    
+            // Calculate how many times the texture should repeat
+            var tileCountX = rect.width / patternTexture.width;
+            var tileCountY = rect.height / patternTexture.height;
+    
+            // Use tile counts for tex coords - this creates true repeating
+            var texCoords = new Rect(0, 0, tileCountX, tileCountY);
+            var prevColor = GUI.color;
+            GUI.color = tintColor;
+            GUI.DrawTextureWithTexCoords(rect, patternTexture, texCoords);
+            GUI.color = prevColor;
+            
         }
         
         private static void DrawGradientBackground(Rect rect, Gradient gradient, bool horizontal = true)
         {
             if (gradient == null) return;
 
-            int textureWidth = horizontal ? 32 : 1;
-            int textureHeight = horizontal ? 1 : 32;
+            var textureWidth = horizontal ? 32 : 1;
+            var textureHeight = horizontal ? 1 : 32;
     
             // Create texture with optimal size for the gradient direction
-            Texture2D texture = new Texture2D(textureWidth, textureHeight);
-            texture.wrapMode = TextureWrapMode.Clamp;
-    
-            // Fill texture with gradient colors
-            Color[] pixels = new Color[textureWidth * textureHeight];
-    
-            for (int i = 0; i < (horizontal ? textureWidth : textureHeight); i++)
+            var texture = new Texture2D(textureWidth, textureHeight)
             {
-                float t = (float)i / (horizontal ? textureWidth - 1 : textureHeight - 1);
-                Color color = gradient.Evaluate(t);
+                wrapMode = TextureWrapMode.Clamp
+            };
+
+            // Fill texture with gradient colors
+            var pixels = new Color[textureWidth * textureHeight];
+    
+            for (var i = 0; i < (horizontal ? textureWidth : textureHeight); i++)
+            {
+                var t = (float)i / (horizontal ? textureWidth - 1 : textureHeight - 1);
+                var color = gradient.Evaluate(t);
         
                 if (horizontal)
                 {
                     // Horizontal gradient - same color for entire column
-                    for (int j = 0; j < textureHeight; j++)
+                    for (var j = 0; j < textureHeight; j++)
                     {
                         pixels[i + j * textureWidth] = color;
                     }
@@ -109,7 +145,7 @@ namespace VolumeBox.Colorbox.Editor
                 else
                 {
                     // Vertical gradient - same color for entire row
-                    for (int j = 0; j < textureWidth; j++)
+                    for (var j = 0; j < textureWidth; j++)
                     {
                         pixels[j + i * textureWidth] = color;
                     }
